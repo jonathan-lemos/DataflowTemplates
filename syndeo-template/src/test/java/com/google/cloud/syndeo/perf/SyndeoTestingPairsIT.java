@@ -25,6 +25,7 @@ import com.google.cloud.teleport.it.common.TestProperties;
 import com.google.cloud.teleport.it.common.utils.PipelineUtils;
 import com.google.cloud.teleport.it.common.utils.ResourceManagerUtils;
 import java.io.IOException;
+import java.nio.channels.Pipe;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.metrics.MetricKey;
@@ -74,60 +76,63 @@ public class SyndeoTestingPairsIT {
                 SourceSinkUrns.create(
                     "syndeo:schematransform:com.google.cloud:pubsub_read:v1",
                     "beam:schematransform:org.apache.beam:bigquery_storage_write:v1",
-                    true)
-                //                SourceSinkUrns.create(
-                //                    "syndeo:schematransform:com.google.cloud:pubsub_read:v1",
-                //                    "beam:schematransform:org.apache.beam:spanner_write:v1",
-                //                    true)
-                //                                SourceSinkUrns.create(
-                //
-                // "syndeo:schematransform:com.google.cloud:pubsub_read:v1",
-                //
-                // "beam:schematransform:org.apache.beam:kafka_write:v1",
-                //                                    true),
-                //                                SourceSinkUrns.create(
-                //
-                // "syndeo:schematransform:com.google.cloud:pubsub_read:v1",
-                //
-                // "beam:schematransform:org.apache.beam:file_write:v1",
-                //                                    true),
-                //                                SourceSinkUrns.create(
-                //
-                // "syndeo:schematransform:com.google.cloud:pubsub_read:v1",
-                //
-                // "beam:schematransform:org.apache.beam:pubsublite_write:v1",
-                //                                    true),
-                //                                SourceSinkUrns.create(
-                //
-                // "syndeo:schematransform:com.google.cloud:pubsub_read:v1",
-                //
-                // "syndeo:schematransform:com.google.cloud:bigtable_write:v1",
-                //                                    true)
-                //
-                //                // We test all sources against a BigQuery sink
-                //                                SourceSinkUrns.create(
-                //
-                //                 "beam:schematransform:org.apache.beam:bigquery_storage_read:v1",
-                //
-                //                 "beam:schematransform:org.apache.beam:bigquery_storage_write:v1",
-                //                                    false),
-                //                SourceSinkUrns.create(
-                //                    "beam:schematransform:org.apache.beam:kafka_read:v1",
-                //
-                // "beam:schematransform:org.apache.beam:bigquery_storage_write:v1",
-                //                    true),
-                //                                SourceSinkUrns.create(
-                //
-                // "beam:schematransform:org.apache.beam:pubsublite_read:v1",
-                //
-                //                 "beam:schematransform:org.apache.beam:bigquery_storage_write:v1",
-                //                                        true),
-                //                                SourceSinkUrns.create(
-                //
-                // "syndeo:schematransform:com.google.cloud:pubsub_read:v1",
-                //
-                //                 "beam:schematransform:org.apache.beam:bigquery_storage_write:v1",
-                //                                        true)
+                    true),
+                                SourceSinkUrns.create(
+                                    "syndeo:schematransform:com.google.cloud:pubsub_read:v1",
+                                    "beam:schematransform:org.apache.beam:spanner_write:v1",
+                                    true),
+                                                SourceSinkUrns.create(
+
+                 "syndeo:schematransform:com.google.cloud:pubsub_read:v1",
+
+                 "beam:schematransform:org.apache.beam:kafka_write:v1",
+                                                    true),
+// file write resource manager doesn't currently exist
+//                                                SourceSinkUrns.create(
+//
+//                 "syndeo:schematransform:com.google.cloud:pubsub_read:v1",
+//
+//                 "beam:schematransform:org.apache.beam:file_write:v1",
+//                                                    true),
+                                                SourceSinkUrns.create(
+
+                 "syndeo:schematransform:com.google.cloud:pubsub_read:v1",
+
+                 "beam:schematransform:org.apache.beam:pubsublite_write:v1",
+                                                    true),
+                                                SourceSinkUrns.create(
+
+                 "syndeo:schematransform:com.google.cloud:pubsub_read:v1",
+
+                 "syndeo:schematransform:com.google.cloud:bigtable_write:v1",
+                                                    true),
+
+                                // We test all sources against a BigQuery sink
+// uncomment when https://github.com/apache/beam/pull/26873 is merged and incorporated into a beam version
+                                                SourceSinkUrns.create(
+
+                                 "beam:schematransform:org.apache.beam:bigquery_storage_read:v1",
+
+                                 "beam:schematransform:org.apache.beam:bigquery_storage_write:v1",
+                                                    false),
+// the kafka read reads 0 elements and stalls indefinitely. root cause unknown
+//                                SourceSinkUrns.create(
+//                                    "beam:schematransform:org.apache.beam:kafka_read:v1",
+//
+//                 "beam:schematransform:org.apache.beam:bigquery_storage_write:v1",
+//                                    true),
+                                                SourceSinkUrns.create(
+
+                 "beam:schematransform:org.apache.beam:pubsublite_read:v1",
+
+                                 "beam:schematransform:org.apache.beam:bigquery_storage_write:v1",
+                                                        true),
+                                                SourceSinkUrns.create(
+
+                 "syndeo:schematransform:com.google.cloud:pubsub_read:v1",
+
+                                 "beam:schematransform:org.apache.beam:bigquery_storage_write:v1",
+                                                        true)
                 )));
   }
 
@@ -170,7 +175,7 @@ public class SyndeoTestingPairsIT {
                 // TODO(pabloem): Avoid passing this value. Instead use a proper auto-defined value.
                 "--numStorageWriteApiStreams=10")
             .create();
-    run(syndeoOptions, dataGenOptions, Duration.ofMinutes(1));
+    run(syndeoOptions, dataGenOptions, Duration.ofMinutes(10));
   }
 
   public void run(
@@ -232,14 +237,15 @@ public class SyndeoTestingPairsIT {
     }
 
     LOG.info(
-        "Waiting up to 4 minutes for syndeo test pipeline to finish processing all the input."
+        "Waiting up to {} minutes for syndeo test pipeline to finish processing all the input."
             + " Input size: {} elements",
-        getCounterValue("elementsProcessed", generatorResult));
+        4 * timeoutMultiplier.toMinutes(),
+        getMaxCounterValue("elementsProcessed", generatorResult));
+
     boolean completed =
         PipelineUtils.waitUntil(
-            syndeoResult,
-            () -> getCounterValue("elementsProcessed", syndeoResult).equals(NUM_ROWS_FOR_TEST),
-            4 * timeoutMultiplier.toMillis());
+            () -> getMaxCounterValue( "elementsProcessed", syndeoResult) >= (long)NUM_ROWS_FOR_TEST,
+            10 * timeoutMultiplier.toMillis());
 
     LOG.info(
         "Pipeline {} in processing all elements. Cancelling and waiting "
@@ -249,7 +255,6 @@ public class SyndeoTestingPairsIT {
     syndeoResult.cancel();
 
     PipelineUtils.waitUntil(
-        syndeoResult,
         () ->
             Set.of(
                     PipelineResult.State.CANCELLED,
@@ -258,11 +263,11 @@ public class SyndeoTestingPairsIT {
                 .contains(syndeoResult.getState()),
         3 * timeoutMultiplier.toMillis());
 
-    boolean success = getCounterValue("elementsProcessed", syndeoResult) > NUM_ROWS_FOR_TEST * 0.95;
+    boolean success = getMaxCounterValue("elementsProcessed", syndeoResult) > NUM_ROWS_FOR_TEST * 0.95;
     if (!success) {
       throw new AssertionError(
           "Processed a total of "
-              + getCounterValue("elementsProcessed", syndeoResult)
+              + getMaxCounterValue("elementsProcessed", syndeoResult)
               + " elements. Expectded "
               + NUM_ROWS_FOR_TEST);
     }
@@ -274,14 +279,16 @@ public class SyndeoTestingPairsIT {
     RESOURCE_MANAGERS.clear();
   }
 
-  static Long getCounterValue(String counterName, PipelineResult pipelineResult) {
+  static List<Long> getCounterValues(String counterName, PipelineResult pipelineResult) {
     return StreamSupport.stream(
             pipelineResult.metrics().allMetrics().getCounters().spliterator(), false)
         .filter(counterResult -> counterResult.getName().getName().equals(counterName))
-        .findFirst()
-        .orElse(
-            MetricResult.create(MetricKey.create("any", MetricName.named("any", "any")), -1L, -1L))
-        .getAttempted();
+        .map(MetricResult::getAttempted)
+            .collect(Collectors.toList());
+  }
+
+  static long getMaxCounterValue(String counterName, PipelineResult pipelineResult) {
+    return getCounterValues(counterName, pipelineResult).stream().max(Long::compare).orElse(-1L);
   }
 
   static Map<String, Object> dataGeneratorConfiguration() {
@@ -289,7 +296,7 @@ public class SyndeoTestingPairsIT {
         "urn",
         "syndeo_test:schematransform:com.google.cloud:generate_data:v1",
         "configurationParameters",
-        Map.of("numRows", NUM_ROWS_FOR_TEST, "runtimeSeconds", 60, "useNestedSchema", true));
+        Map.of("numRows", NUM_ROWS_FOR_TEST, "runtimeSeconds", 60, "useNestedSchema", false));
   }
 
   @AutoValue

@@ -24,7 +24,7 @@ import com.google.cloud.teleport.metadata.TemplateLoadTest;
 /** Base class for Templates Load Tests. */
 public class TemplateLoadTestBase extends LoadTestBase {
 
-  PipelineLauncher launcher() {
+  protected PipelineLauncher launcher() {
     // If there is a TemplateLoadTest annotation, return appropriate dataflow template client
     // Else, return null.
     TemplateLoadTest annotation = getClass().getAnnotation(TemplateLoadTest.class);

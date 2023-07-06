@@ -57,7 +57,7 @@ public class IOLoadTestBase extends LoadTestBase {
   }
 
   @Override
-  PipelineLauncher launcher() {
+  protected PipelineLauncher launcher() {
     return DefaultPipelineLauncher.builder().setCredentials(CREDENTIALS).build();
   }
 

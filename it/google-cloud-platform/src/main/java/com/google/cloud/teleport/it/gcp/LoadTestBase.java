@@ -116,7 +116,7 @@ public abstract class LoadTestBase {
     monitoringClient.cleanupAll();
   }
 
-  abstract PipelineLauncher launcher();
+  protected abstract PipelineLauncher launcher();
 
   /**
    * Exports the metrics of given dataflow job to BigQuery.

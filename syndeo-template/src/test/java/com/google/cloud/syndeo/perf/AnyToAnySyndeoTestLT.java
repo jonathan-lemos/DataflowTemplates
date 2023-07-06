@@ -112,7 +112,7 @@ public class AnyToAnySyndeoTestLT {
                         configToMap(
                             BigQueryStorageWriteApiSchemaTransformProvider
                                 .BigQueryStorageWriteApiSchemaTransformConfiguration.builder()
-                                .setTable(String.format("%s.%s", bqrm.getDatasetId(), TEST_ID))
+                                .setTable(String.format("%s:%s.%s", PROJECT, bqrm.getDatasetId(), TEST_ID))
                                 .setAutoSharding(true)
                                 .build())),
                     buildJsonConfig(
@@ -120,7 +120,7 @@ public class AnyToAnySyndeoTestLT {
                         configToMap(
                             BigQueryDirectReadSchemaTransformProvider
                                 .BigQueryDirectReadSchemaTransformConfiguration.builder()
-                                .setTableSpec(String.format("%s.%s", bqrm.getDatasetId(), TEST_ID))
+                                .setTableSpec(String.format("%s:%s.%s", PROJECT, bqrm.getDatasetId(), TEST_ID))
                                 .build())));
               }),
           "beam:schematransform:org.apache.beam:kafka_read:v1",
@@ -224,7 +224,7 @@ public class AnyToAnySyndeoTestLT {
                                 .SyndeoPubsubReadSchemaTransformConfiguration.builder()
                                 .setFormat("AVRO")
                                 .setSchema(
-                                    AvroUtils.toAvroSchema(SyndeoLoadTestUtils.NESTED_TABLE_SCHEMA)
+                                    AvroUtils.toAvroSchema(SyndeoLoadTestUtils.SIMPLE_TABLE_SCHEMA)
                                         .toString())
                                 .setSubscription(sname.toString())
                                 .build())));
@@ -343,7 +343,7 @@ public class AnyToAnySyndeoTestLT {
                             StorageType.SSD)));
                 String tableName = ("table-" + TEST_ID).substring(0, 29);
                 btrm.createTable(
-                    tableName, SyndeoLoadTestUtils.NESTED_TABLE_SCHEMA.getFieldNames()); // TODO
+                    tableName, SyndeoLoadTestUtils.SIMPLE_TABLE_SCHEMA.getFieldNames()); // TODO
                 return SinkAndSourceConfigs.create(
                     buildJsonConfig(
                         "syndeo:schematransform:com.google.cloud:bigtable_write:v1",

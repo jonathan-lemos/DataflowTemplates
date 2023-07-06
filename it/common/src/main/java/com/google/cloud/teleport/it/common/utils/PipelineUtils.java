@@ -43,13 +43,12 @@ public class PipelineUtils {
   public static boolean waitUntilState(
       PipelineResult pipeline, PipelineResult.State expectedState, Long timeoutMillis)
       throws InterruptedException {
-    return waitUntil(pipeline, () -> pipeline.getState().equals(expectedState), timeoutMillis);
+    return waitUntil(() -> pipeline.getState().equals(expectedState), timeoutMillis);
   }
 
   /**
    * Waits until a specified condition is true, up to a specified timeout.
    *
-   * @param pipeline the PipelineResult object to monitor
    * @param lambda a Supplier that returns a boolean indicating whether the condition is true
    * @param timeoutMillis the maximum amount of time to wait for the condition to be true, in
    *     milliseconds
@@ -57,7 +56,7 @@ public class PipelineUtils {
    * @throws InterruptedException if the thread is interrupted while waiting
    */
   public static boolean waitUntil(
-      PipelineResult pipeline, Supplier<Boolean> lambda, Long timeoutMillis)
+      Supplier<Boolean> lambda, Long timeoutMillis)
       throws InterruptedException {
     Instant start = Instant.now();
     while (true) {
